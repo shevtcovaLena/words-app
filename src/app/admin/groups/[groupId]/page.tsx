@@ -7,6 +7,8 @@ import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import type { Database } from '@/types/supabase'
 
+export const dynamic = 'force-dynamic'
+
 type Word = Database['public']['Tables']['words']['Row']
 type Group = Database['public']['Tables']['word_groups']['Row']
 type GroupItem = Database['public']['Tables']['word_group_items']['Row']
