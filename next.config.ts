@@ -21,7 +21,7 @@ const withPWA = require('next-pwa')({
 })
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+  // Убрали cacheComponents, так как он несовместим с dynamic = 'force-dynamic'
   // Добавляем пустой turbopack конфиг для совместимости с next-pwa (webpack)
   turbopack: {},
 }
