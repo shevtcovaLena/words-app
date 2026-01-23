@@ -1,29 +1,29 @@
 import type { NextConfig } from 'next'
+import withPWAInit from '@ducanh2912/next-pwa'
 
-const withPWA = require('next-pwa')({
+const withPWA = withPWAInit({
   dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  disable: false,
   workboxOptions: {
+    disableDevLogs: true,
     runtimeCaching: [
       {
         urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
         handler: 'NetworkFirst',
         options: {
-          cacheName: 'supabase-api-cache',
+          cacheName: 'supabase-api',
           networkTimeoutSeconds: 10,
           expiration: {
             maxEntries: 50,
             maxAgeSeconds: 7 * 24 * 60 * 60,
           },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
         },
       },
       {
-        urlPattern: /^https?:\/\/.*\.(png|jpg|jpeg|svg|gif|webp|ico)$/i,
+        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
         handler: 'CacheFirst',
         options: {
           cacheName: 'images-cache',
@@ -38,7 +38,7 @@ const withPWA = require('next-pwa')({
 })
 
 const nextConfig: NextConfig = {
-  turbopack: {},
+  turbopack: {}, // ← добавьте это!
 }
 
 export default withPWA(nextConfig)
