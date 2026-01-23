@@ -6,7 +6,7 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: false,
+  disable: process.env.NODE_ENV === 'development',
   workboxOptions: {
     disableDevLogs: true,
     runtimeCaching: [
@@ -37,8 +37,6 @@ const withPWA = withPWAInit({
   },
 })
 
-const nextConfig: NextConfig = {
-  turbopack: {}, // ← добавьте это!
-}
+const nextConfig: NextConfig = {}
 
 export default withPWA(nextConfig)
