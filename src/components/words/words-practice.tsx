@@ -184,6 +184,14 @@ export function WordsPractice({ groupId }: WordsPracticeProps = {}) {
 
   return (
     <div className="space-y-6">
+      {/* Тренировка текущего слова */}
+      {currentWord && (
+        <WordPractice
+          word={currentWord}
+          onNext={handleAnswer}
+          isRetry={isRetry}
+        />
+      )}
       {/* Статистика */}
       <Card>
         <CardContent className="pt-6">
@@ -223,15 +231,6 @@ export function WordsPractice({ groupId }: WordsPracticeProps = {}) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Тренировка текущего слова */}
-      {currentWord && (
-        <WordPractice
-          word={currentWord}
-          onNext={handleAnswer}
-          isRetry={isRetry}
-        />
-      )}
 
       {/* Кнопка перезапуска */}
       <div className="flex justify-center">

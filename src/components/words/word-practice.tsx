@@ -117,13 +117,20 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
       setHasAnyError(true)
     }
 
-    // МГНОВЕННЫЙ переход к следующему пропуску (БЕЗ задержки)
     const nextIndex = currentGapIndex + 1
+
+    // Если это ПОСЛЕДНИЙ пропуск → переходим к следующему слову
     if (nextIndex >= gapsCount) {
       setAllCompleted(true)
+
+      // Добавляем задержку для показа результата (эмодзи), затем автопереход
+      setTimeout(() => {
+        const allCorrect = newGaps.every((gap) => gap.isCorrect === true)
+        onNext(allCorrect)
+      }, 1000) // 1 секунда чтобы увидеть 🎉 или 👏
     } else {
+      // Если НЕ последний → фокусируем следующий input
       setCurrentGapIndex(nextIndex)
-      // Фокусируем следующий input СРАЗУ
       focusNextInput(nextIndex)
     }
   }
@@ -327,38 +334,21 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
             >
               <Check className="h-10 w-10" />
             </Button>
-          ) : allCompleted || gaps.every((gap) => gap.isChecked) ? (
+          ) : allCompleted ? (
+            // Показываем только результат (без кнопки, автопереход через 1 сек)
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-4"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`rounded-2xl p-6 ${
+                !hasAnyError
+                  ? 'bg-green-100 dark:bg-green-900/30'
+                  : 'bg-orange-100 dark:bg-orange-900/30'
+              }`}
             >
-              {/* Итоговый результат */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`rounded-2xl p-6 ${
-                  !hasAnyError
-                    ? 'bg-green-100 dark:bg-green-900/30'
-                    : 'bg-orange-100 dark:bg-orange-900/30'
-                }`}
-              >
-                <span className="text-5xl">{!hasAnyError ? '🎉' : '👏'}</span>
-              </motion.div>
-
-              <Button
-                onClick={() => {
-                  const allCorrect = gaps.every((gap) => gap.isCorrect === true)
-                  onNext(allCorrect)
-                }}
-                size="lg"
-                className="h-20 w-20 rounded-full bg-blue-500 p-0 hover:bg-blue-600"
-              >
-                <ArrowRight className="h-10 w-10" />
-              </Button>
+              <span className="text-5xl">{!hasAnyError ? '🎉' : '👏'}</span>
             </motion.div>
           ) : (
-            // Ожидание автоперехода к следующему пропуску
+            // Промежуточное состояние (между пропусками)
             <div className="h-20 w-20" />
           )}
         </div>
