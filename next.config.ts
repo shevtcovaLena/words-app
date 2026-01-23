@@ -17,7 +17,6 @@ const withPWA = require('next-pwa')({
             maxEntries: 50,
             maxAgeSeconds: 7 * 24 * 60 * 60,
           },
-          // Кэшируем POST запросы (для мутаций)
           cacheableResponse: {
             statuses: [0, 200],
           },
@@ -42,4 +41,4 @@ const nextConfig: NextConfig = {
   turbopack: {},
 }
 
-module.exports = withPWA(nextConfig)
+export default withPWA(nextConfig)
