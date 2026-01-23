@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
+
 @custom-variant dark (&:is(.dark *));
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -43,6 +45,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -78,6 +81,7 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -112,11 +116,31 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* Фикс для мобильной клавиатуры - предотвращает прыжки viewport */
+  @supports (height: 100svh) {
+    html {
+      height: 100svh;
+    }
+  }
+  
   body {
     @apply bg-background text-foreground;
+    min-height: 100svh;
+    overflow: auto;
+  }
+  
+  /* Предотвращает zoom на iOS при фокусе на input */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    font-size: 16px !important;
   }
 }

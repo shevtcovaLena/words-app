@@ -93,6 +93,12 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
     }
   }, [currentGapIndex, allCompleted, wordId])
 
+  function focusNextInput(nextIndex: number) {
+    setTimeout(() => {
+      inputRefs.current[nextIndex]?.focus({ preventScroll: true })
+    }, 0)
+  }
+
   // Проверка текущего пропуска
   function handleCheckGap() {
     const currentInput = gaps[currentGapIndex].input.toLowerCase()
@@ -111,19 +117,15 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
       setHasAnyError(true)
     }
 
-    // Автопереход к следующему пропуску через небольшую задержку
-    const delay = isCorrect ? 500 : 1000
-    setTimeout(() => {
-      setCurrentGapIndex((prevIndex) => {
-        const nextIndex = prevIndex + 1
-        if (nextIndex >= gapsCount) {
-          // Все пропуски проверены
-          setAllCompleted(true)
-          return prevIndex
-        }
-        return nextIndex
-      })
-    }, delay)
+    // МГНОВЕННЫЙ переход к следующему пропуску (БЕЗ задержки)
+    const nextIndex = currentGapIndex + 1
+    if (nextIndex >= gapsCount) {
+      setAllCompleted(true)
+    } else {
+      setCurrentGapIndex(nextIndex)
+      // Фокусируем следующий input СРАЗУ
+      focusNextInput(nextIndex)
+    }
   }
 
   // Обновление ввода для текущего пропуска
@@ -194,10 +196,12 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
                   inputRefs.current[gapIndex] = el
                 }}
                 type="text"
+                inputMode="text" // ← явно указываем режим клавиатуры
                 value={currentGap.input}
                 onChange={(e) => handleInputChange(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="h-12 w-12 rounded-xl border-4 border-yellow-400 bg-yellow-50 text-center text-2xl font-bold transition-all focus:border-yellow-500 focus:ring-2 focus:ring-yellow-300 focus:outline-none md:h-16 md:w-16 md:text-4xl dark:bg-yellow-900/20"
+                style={{ fontSize: '16px' }} // ← минимум 16px для iOS (предотвращает zoom)
                 autoFocus={isCurrentGap}
               />
             ) : (
