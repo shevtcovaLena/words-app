@@ -13,14 +13,18 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: 'Words Learning App - Обучение словарным словам',
+  title: 'СЛОВАРЬиКо - Учи словарные слова играючи',
   description:
-    'Приложение для изучения словарных слов с заполнением пропущенных букв',
+    'Интерактивное приложение для изучения словарных слов с заполнением пропущенных букв',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Words Learning App',
+    title: 'СЛОВАРЬиКо',
+  },
+  icons: {
+    icon: '/icon-192x192.png',
+    apple: '/icon-192x192.png',
   },
 }
 
@@ -30,8 +34,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: light)', color: '#f5af3d' }, // Оранжевый Scratch
+    { media: '(prefers-color-scheme: dark)', color: '#2e1a47' }, // Тёмно-фиолетовый
   ],
 }
 
@@ -47,7 +51,7 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
         <NextTopLoader showSpinner={false} height={2} color="#2acf80" />
         <ThemeProvider
