@@ -103,6 +103,20 @@ export async function addWord(formData: FormData): Promise<ActionResult> {
     return { success: false, error: 'Уровень сложности должен быть от 1 до 5' }
   }
 
+  //защита от дублей
+  const { data: existingWord } = await supabase
+    .from('words')
+    .select('id')
+    .eq('full_word', full_word)
+    .single()
+
+  if (existingWord) {
+    return {
+      success: false,
+      error: 'Это слово уже существует в базе данных',
+    }
+  }
+
   // Используем двойное приведение типа для обхода проблемы с типизацией Supabase
   const insertData: WordInsert = {
     full_word,

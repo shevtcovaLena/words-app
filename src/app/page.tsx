@@ -1,28 +1,12 @@
 import { Suspense } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { ThemeSwitcher } from '@/components/theme-switcher'
 import { GroupsList } from '@/components/groups-list'
 import { Loader2, Sparkles } from 'lucide-react'
-import Link from 'next/link'
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center">
       <div className="flex w-full flex-1 flex-col items-center gap-12 p-5">
-        <nav className="border-b-foreground/10 flex h-16 w-full justify-center border-b">
-          <div className="flex w-full max-w-5xl items-center justify-between p-3 px-5 text-sm">
-            <div className="flex items-center gap-2 font-semibold">
-              <Link href={'/'} className="flex items-center gap-2 text-lg">
-                <span className="text-2xl">📚</span>
-                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Словарик
-                </span>
-              </Link>
-            </div>
-            <ThemeSwitcher />
-          </div>
-        </nav>
-
         <div className="flex max-w-2xl flex-1 flex-col items-center justify-center gap-8 px-4">
           <div className="flex flex-col items-center gap-6 text-center">
             <div className="flex items-center gap-3">

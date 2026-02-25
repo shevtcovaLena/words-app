@@ -6,6 +6,9 @@ import { Analytics } from '@vercel/analytics/react'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './globals.css'
 import ReactQueryProvider from '@/providers/ReactQueryProvider'
+import { UserProvider } from '@/contexts/user-context'
+import { Header } from '@/components/header'
+import { getCurrentUser } from '@/lib/auth'
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -49,7 +52,9 @@ type RootLayoutProps = {
   children: React.ReactNode
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const user = await getCurrentUser()
+
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
@@ -60,11 +65,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
           enableSystem
           disableTransitionOnChange
         >
-          <ReactQueryProvider>
-            {children}
-            <Analytics />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </ReactQueryProvider>
+          <UserProvider user={user || { role: null }}>
+            <ReactQueryProvider>
+              <Header />
+              {children}
+              <Analytics />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </ReactQueryProvider>
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>

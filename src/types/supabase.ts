@@ -61,6 +61,21 @@ export interface Database {
           last_attempt?: string
         }
       }
+      profiles: {
+        Row: {
+          id: string
+          role: 'user' | 'admin'
+          created_at: string
+        }
+        Insert: {
+          id: string
+          role?: 'user' | 'admin'
+          created_at?: string
+        }
+        Update: {
+          role?: 'user' | 'admin'
+        }
+      }
       word_groups: {
         Row: {
           id: string

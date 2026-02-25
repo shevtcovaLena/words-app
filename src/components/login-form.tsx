@@ -33,15 +33,24 @@ export function LoginForm({
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (error) throw error
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push('/protected')
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user!.id)
+        .single<{ role: string }>()
+
+      console.log('User profile:', profile)
+
+      router.refresh()
+      router.push(profile?.role === 'admin' ? '/admin' : '/')
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Ошибка')
     } finally {
       setIsLoading(false)
     }
@@ -51,9 +60,10 @@ export function LoginForm({
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Вход</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Введите свои учетные данные для доступа к защищенным разделам
+            приложения.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -72,12 +82,12 @@ export function LoginForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Пароль</Label>
                   <Link
                     href="/auth/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    Забыли пароль?
                   </Link>
                 </div>
                 <Input
@@ -90,16 +100,16 @@ export function LoginForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Logging in...' : 'Login'}
+                {isLoading ? 'Вход...' : 'Войти'}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{' '}
+              У вас нет аккаунта?{' '}
               <Link
                 href="/auth/sign-up"
                 className="underline underline-offset-4"
               >
-                Sign up
+                Регистрация
               </Link>
             </div>
           </form>
