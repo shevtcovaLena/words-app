@@ -14,6 +14,21 @@ export function SpeakButton({ text, className = '' }: SpeakButtonProps) {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   const speak = useCallback(() => {
+    // HarmonyOS fallback
+    if (navigator.userAgent.includes('HarmonyOS')) {
+      // Пробуем Huawei TTS
+      if ((window as any).huawei?.tts?.speak) {
+        ;(window as any).huawei.tts.speak(text)
+        setIsPlaying(true)
+        setTimeout(() => setIsPlaying(false), 3000)
+        return
+      }
+
+      // Fallback: уведомление
+      alert('Звук недоступен на этом устройстве')
+      return
+    }
+
     if (!('speechSynthesis' in window)) return
 
     window.speechSynthesis.cancel()
