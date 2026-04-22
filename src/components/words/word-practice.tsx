@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { getMissingLetters } from '@/lib/words'
 import { WordItem } from '@/lib/game'
 import { Check, ArrowRight, RotateCcw } from 'lucide-react'
-import { SpeakButton } from './speak-button'
+import { SpeakButtonNoSSR } from './speak-button'
 
 interface WordPracticeProps {
   word: WordItem
@@ -244,7 +244,10 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
 
   return (
     <Card className="relative w-full overflow-hidden">
-      <SpeakButton text={word.fullWord} className="absolute top-3 left-3" />
+      <SpeakButtonNoSSR
+        text={word.fullWord}
+        className="absolute top-3 left-3"
+      />
       <CardContent className="space-y-8 p-6">
         {/* Индикатор повтора */}
         <AnimatePresence>
