@@ -36,7 +36,7 @@ export function AddWordForm() {
   const [isPublic, setIsPublic] = useState(true)
 
   // Batch режим
-  const [isBatchMode, setIsBatchMode] = useState(false)
+  // const [isBatchMode, setIsBatchMode] = useState(false)
   const [batchWords, setBatchWords] = useState('')
   const [currentBatchIndex, setCurrentBatchIndex] = useState(0)
   const [batchWordsList, setBatchWordsList] = useState<string[]>([])

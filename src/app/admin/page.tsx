@@ -8,7 +8,6 @@ import { EnvVarWarningAdmin } from '@/components/env-var-warning-admin'
 
 /**
  * Страница администратора для добавления слов и управления группами
- * TODO: Добавить проверку аутентификации через middleware
  */
 export default function AdminPage() {
   return (

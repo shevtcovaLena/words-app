@@ -39,63 +39,28 @@ export async function addWord(formData: FormData): Promise<ActionResult> {
     }
   }
 
-  // Проверка, что маска соответствует слову (кроме пропусков)
-  // Один пропуск _ может соответствовать нескольким буквам (например, "ру_ский" → "русский", где _ = "сс")
-  let wordIndex = 0
-  let maskIndex = 0
+  // Проверка, что маска соответствует слову
+  // _ = ровно один символ
+  if (mask.length !== full_word.length) {
+    return {
+      success: false,
+      error: `Длина маски должна совпадать с длиной слова (${full_word.length} символов)`,
+    }
+  }
 
-  while (maskIndex < mask.length && wordIndex < full_word.length) {
-    if (mask[maskIndex] === '_') {
-      // Пропуск - пропускаем буквы в слове до следующего совпадения
-      maskIndex++ // Переходим к следующему символу в маске
+  for (let i = 0; i < mask.length; i++) {
+    const maskChar = mask[i]
+    const wordChar = full_word[i]
 
-      // Продолжаем, пока не найдем совпадение или не закончится слово
-      while (wordIndex < full_word.length) {
-        // Проверяем, совпадает ли текущая позиция в слове с текущей позицией в маске
-        if (
-          maskIndex < mask.length &&
-          full_word[wordIndex] === mask[maskIndex] &&
-          full_word[wordIndex] !== ' '
-        ) {
-          // Нашли совпадение - пропуск закончился
-          break
-        }
-        // Также останавливаемся, если в маске закончились символы
-        if (maskIndex >= mask.length) {
-          // Берем все оставшиеся буквы
-          wordIndex = full_word.length
-          break
-        }
-        wordIndex++
-      }
-    } else if (mask[maskIndex] === full_word[wordIndex]) {
-      // Символы совпадают
-      maskIndex++
-      wordIndex++
-    } else if (mask[maskIndex] === ' ' && full_word[wordIndex] === ' ') {
-      // Пробелы совпадают
-      maskIndex++
-      wordIndex++
-    } else {
+    if (maskChar === '_') {
+      continue
+    }
+
+    if (maskChar !== wordChar) {
       return {
         success: false,
-        error: `Маска не соответствует слову на позиции ${wordIndex + 1}: ожидалось "${full_word[wordIndex]}", найдено "${mask[maskIndex]}"`,
+        error: `Маска не соответствует слову на позиции ${i + 1}: ожидалось "${wordChar}", найдено "${maskChar}"`,
       }
-    }
-  }
-
-  // Проверяем, что обработали все символы
-  if (maskIndex < mask.length) {
-    return {
-      success: false,
-      error: `В маске остались необработанные символы начиная с позиции ${maskIndex + 1}`,
-    }
-  }
-
-  if (wordIndex < full_word.length) {
-    return {
-      success: false,
-      error: `В слове остались необработанные символы начиная с позиции ${wordIndex + 1}`,
     }
   }
 
