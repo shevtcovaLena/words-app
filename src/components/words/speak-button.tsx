@@ -64,7 +64,7 @@ export function SpeakButton({ text, className = '' }: SpeakButtonProps) {
 
     utterance.voice = russianVoice
     utterance.lang = 'ru-RU'
-    utterance.rate = 0.9 // Чуть медленнее для детей
+    utterance.rate = 0.9
     utterance.pitch = 1.0
     utterance.volume = 1.0
 
