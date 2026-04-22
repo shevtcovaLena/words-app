@@ -3,26 +3,11 @@
 import { Button } from '@/components/ui/button'
 import { Volume2, Pause, Play } from 'lucide-react'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import dynamic from 'next/dynamic'
 
 interface SpeakButtonProps {
   text: string
   className?: string
 }
-
-// В начале компонента (после импортов):
-export const SpeakButtonNoSSR = dynamic(
-  () =>
-    import('./speak-button').then((mod) => ({
-      default: mod.SpeakButton,
-    })),
-  {
-    ssr: false, // ← отключаем SSR полностью
-    loading: () => (
-      <div className="bg-muted/50 absolute top-3 left-3 h-10 w-10 animate-pulse rounded-lg" />
-    ),
-  },
-)
 
 export function SpeakButton({ text, className = '' }: SpeakButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false)
@@ -103,6 +88,11 @@ export function SpeakButton({ text, className = '' }: SpeakButtonProps) {
     } else {
       speak()
     }
+  }
+
+  // 🔧 ЗАЩИТА ОТ SSR: рендерим пустой div на сервере
+  if (typeof window === 'undefined') {
+    return <div className={`bg-muted/50 h-10 w-10 rounded-lg ${className}`} />
   }
 
   return (
