@@ -59,9 +59,8 @@ export function SpeakButton({ text, className = '' }: SpeakButtonProps) {
     }
   }, [isPlaying, speak, stop])
 
-  // Защита SSR
-  if (typeof window === 'undefined') {
-    return <div className={`bg-muted/50 h-10 w-10 rounded-lg ${className}`} />
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    return null // ❌ НЕ показываем кнопку
   }
 
   return (
