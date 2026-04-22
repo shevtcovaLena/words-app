@@ -244,7 +244,7 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
 
   return (
     <Card className="relative w-full overflow-hidden">
-      {/* <SpeakButton text={word.fullWord} className="absolute top-3 left-3" /> */}
+      <SpeakButton text={word.fullWord} className="absolute top-3 left-3" />
       <CardContent className="space-y-8 p-6">
         {/* Индикатор повтора */}
         <AnimatePresence>
