@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -17,6 +17,7 @@ import {
 } from '@/app/admin/group-actions'
 import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react'
 import type { Database } from '@/types/supabase'
+import WordRow from './words-list-item'
 
 type Word = Database['public']['Tables']['words']['Row']
 type GroupItem = Database['public']['Tables']['word_group_items']['Row']
@@ -31,7 +32,7 @@ interface GroupWordsManagerProps {
 }
 
 /**
- * Компонент для управления словами в группе с drag-and-drop
+ * Компонент для управления словами в группе
  */
 export function GroupWordsManager({
   groupId,
@@ -47,52 +48,70 @@ export function GroupWordsManager({
   const [selectedGroupWords, setSelectedGroupWords] = useState<Set<string>>(
     new Set(),
   )
+  const groupWordIds = useMemo(() => {
+    return new Set(groupWords.map((word) => word.id))
+  }, [groupWords])
+
+  const groupItemOrderMap = useMemo(() => {
+    return new Map(groupItems.map((item) => [item.word_id, item.sort_order]))
+  }, [groupItems])
+
+  const otherGroupsMap = useMemo(() => {
+    const map = new Map<string, string[]>()
+
+    for (const [wordId, groups] of Object.entries(wordGroupsMap)) {
+      map.set(
+        wordId,
+        groups.filter((gId) => gId !== groupId),
+      )
+    }
+
+    return map
+  }, [wordGroupsMap, groupId])
 
   // Сортируем слова: сначала те, которых нет в других группах, затем остальные
   const sortedAllWords = useMemo(() => {
     const wordsWithoutGroups: Word[] = []
     const wordsWithGroups: Word[] = []
 
-    allWords.forEach((word) => {
-      const otherGroups = (wordGroupsMap[word.id] || []).filter(
-        (gId) => gId !== groupId,
-      )
+    for (const word of allWords) {
+      const otherGroups = otherGroupsMap.get(word.id) || []
       if (otherGroups.length === 0) {
         wordsWithoutGroups.push(word)
       } else {
         wordsWithGroups.push(word)
       }
-    })
+    }
 
     return [...wordsWithoutGroups, ...wordsWithGroups]
-  }, [allWords, wordGroupsMap, groupId])
+  }, [allWords, otherGroupsMap])
 
   // Слова в группе, отсортированные по sort_order
   const sortedGroupWords = useMemo(() => {
     return [...groupWords].sort((a, b) => {
-      const itemA = groupItems.find((item) => item.word_id === a.id)
-      const itemB = groupItems.find((item) => item.word_id === b.id)
-      return (itemA?.sort_order || 0) - (itemB?.sort_order || 0)
+      return (
+        (groupItemOrderMap.get(a.id) || 0) - (groupItemOrderMap.get(b.id) || 0)
+      )
     })
-  }, [groupWords, groupItems])
+  }, [groupWords, groupItemOrderMap])
 
   async function handleAddWords() {
     if (selectedWords.size === 0) {
       return
     }
 
-    startTransition(async () => {
-      const actionResult = await addWordsToGroup(
-        groupId,
-        Array.from(selectedWords),
-      )
-      setResult(actionResult)
+    // startTransition(async () => {
+    const actionResult = await addWordsToGroup(
+      groupId,
+      Array.from(selectedWords),
+    )
+    setResult(actionResult)
 
-      if (actionResult.success) {
-        setSelectedWords(new Set())
-        setTimeout(() => setResult(null), 3000)
-      }
-    })
+    if (actionResult.success) {
+      setSelectedWords(new Set())
+      setTimeout(() => setResult(null), 3000)
+    }
+    // })
   }
 
   async function handleRemoveWords() {
@@ -114,25 +133,23 @@ export function GroupWordsManager({
     })
   }
 
-  function toggleWordSelection(wordId: string) {
-    const newSet = new Set(selectedWords)
-    if (newSet.has(wordId)) {
-      newSet.delete(wordId)
-    } else {
-      newSet.add(wordId)
-    }
-    setSelectedWords(newSet)
-  }
+  const toggleWordSelection = useCallback((wordId: string) => {
+    setSelectedWords((prev) => {
+      const next = new Set(prev)
+      if (next.has(wordId)) next.delete(wordId)
+      else next.add(wordId)
+      return next
+    })
+  }, [])
 
-  function toggleGroupWordSelection(wordId: string) {
-    const newSet = new Set(selectedGroupWords)
-    if (newSet.has(wordId)) {
-      newSet.delete(wordId)
-    } else {
-      newSet.add(wordId)
-    }
-    setSelectedGroupWords(newSet)
-  }
+  const toggleGroupWordSelection = useCallback((wordId: string) => {
+    setSelectedGroupWords((prev) => {
+      const next = new Set(prev)
+      if (next.has(wordId)) next.delete(wordId)
+      else next.add(wordId)
+      return next
+    })
+  }, [])
 
   function selectAllAvailable() {
     const availableWordIds = sortedAllWords
@@ -184,45 +201,18 @@ export function GroupWordsManager({
             </div>
             <div className="max-h-[500px] space-y-2 overflow-y-auto rounded-lg border p-3">
               {sortedAllWords
-                .filter((word) => !groupWords.some((gw) => gw.id === word.id))
+                .filter((word) => !groupWordIds.has(word.id))
                 .map((word) => {
-                  const otherGroups = (wordGroupsMap[word.id] || []).filter(
-                    (gId) => gId !== groupId,
-                  )
-                  const isSelected = selectedWords.has(word.id)
-
+                  const otherGroups = otherGroupsMap.get(word.id) || []
                   return (
-                    <div
+                    <WordRow
                       key={word.id}
-                      className={`flex cursor-pointer items-center justify-between rounded border p-2 transition-colors ${
-                        isSelected
-                          ? 'bg-primary/10 border-primary'
-                          : 'hover:bg-muted border-transparent'
-                      }`}
-                      onClick={() => toggleWordSelection(word.id)}
-                    >
-                      <div className="flex flex-1 items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleWordSelection(word.id)}
-                          className="min-h-[20px] min-w-[20px]"
-                        />
-                        <div className="flex-1">
-                          <span className="font-medium">{word.full_word}</span>
-                          <span className="text-muted-foreground ml-2 font-mono text-sm">
-                            {word.mask}
-                          </span>
-                        </div>
-                        {otherGroups.length > 0 && (
-                          <Badge
-                            variant="secondary"
-                            className="h-3 w-3 rounded-full border-yellow-500 bg-yellow-400 p-0"
-                            title={`Слово уже в ${otherGroups.length} других группах`}
-                          />
-                        )}
-                      </div>
-                    </div>
+                      word={word}
+                      isSelected={selectedWords.has(word.id)}
+                      onToggle={toggleWordSelection}
+                      badgeCount={otherGroups.length}
+                      variant="available"
+                    />
                   )
                 })}
             </div>
@@ -262,43 +252,16 @@ export function GroupWordsManager({
                 </p>
               ) : (
                 sortedGroupWords.map((word) => {
-                  const otherGroups = (wordGroupsMap[word.id] || []).filter(
-                    (gId) => gId !== groupId,
-                  )
-                  const isSelected = selectedGroupWords.has(word.id)
-
+                  const otherGroups = otherGroupsMap.get(word.id) || []
                   return (
-                    <div
+                    <WordRow
                       key={word.id}
-                      className={`flex cursor-pointer items-center justify-between rounded border p-2 transition-colors ${
-                        isSelected
-                          ? 'bg-destructive/10 border-destructive'
-                          : 'hover:bg-muted border-transparent'
-                      }`}
-                      onClick={() => toggleGroupWordSelection(word.id)}
-                    >
-                      <div className="flex flex-1 items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleGroupWordSelection(word.id)}
-                          className="min-h-[20px] min-w-[20px]"
-                        />
-                        <div className="flex-1">
-                          <span className="font-medium">{word.full_word}</span>
-                          <span className="text-muted-foreground ml-2 font-mono text-sm">
-                            {word.mask}
-                          </span>
-                        </div>
-                        {otherGroups.length > 0 && (
-                          <Badge
-                            variant="secondary"
-                            className="h-3 w-3 rounded-full border-yellow-500 bg-yellow-400 p-0"
-                            title={`Слово также в ${otherGroups.length} других группах`}
-                          />
-                        )}
-                      </div>
-                    </div>
+                      word={word}
+                      isSelected={selectedGroupWords.has(word.id)}
+                      onToggle={toggleGroupWordSelection}
+                      badgeCount={otherGroups.length}
+                      variant="group"
+                    />
                   )
                 })
               )}
