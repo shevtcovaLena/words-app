@@ -12,6 +12,7 @@ import {
 import { Trash2 } from 'lucide-react'
 import { deleteWord, type ActionResult } from '@/app/admin/actions'
 import type { Database } from '@/types/supabase'
+import { VirtualList } from '@/components/shared/virtual-list'
 
 type Word = Database['public']['Tables']['words']['Row']
 
@@ -72,19 +73,20 @@ export function WordsList({ words }: WordsListProps) {
             {result.error}
           </div>
         )}
-
-        <div className="space-y-2">
-          {words.map((word) => (
-            <div
-              key={word.id}
-              className="flex items-center justify-between rounded-lg border p-3"
-            >
+        <VirtualList
+          items={words}
+          height={500}
+          estimateSize={84}
+          className="rounded-lg border"
+          renderItem={(word) => (
+            <div className="flex items-center justify-between border p-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{word.full_word}</span>
                   <span className="text-muted-foreground">→</span>
                   <span className="font-mono">{word.mask}</span>
                 </div>
+
                 <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
                   <span>Уровень: {word.level}</span>
                   <span>•</span>
@@ -99,6 +101,7 @@ export function WordsList({ words }: WordsListProps) {
                   </span>
                 </div>
               </div>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -110,8 +113,8 @@ export function WordsList({ words }: WordsListProps) {
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-          ))}
-        </div>
+          )}
+        />
       </CardContent>
     </Card>
   )

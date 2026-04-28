@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { getMissingLetters } from '@/lib/words'
 import { WordItem } from '@/lib/game'
 import { Check, ArrowRight, RotateCcw } from 'lucide-react'
-import { SpeakButton } from './speak-button'
+import { SpeakButton } from '../../shared/speak-button'
 
 interface WordPracticeProps {
   word: WordItem
@@ -22,7 +22,7 @@ interface GapState {
 }
 
 /**
- * Компонент для тренировки одного слова (детский интерфейс)
+ * Компонент для тренировки одного слова
  * Каждый пропуск заполняется и проверяется отдельно
  */
 export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
@@ -100,11 +100,27 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
     }, 0)
   }
 
+  function normalizeOnlyEToYo(str: string) {
+    return str.trim().toLowerCase()
+  }
+
+  function isAnswerCorrect(input: string, expected: string) {
+    const normalizedInput = normalizeOnlyEToYo(input)
+    const normalizedExpected = normalizeOnlyEToYo(expected)
+
+    if (normalizedInput === normalizedExpected) return true
+
+    // разрешаем только "е" вместо "ё" в ответе
+    const expectedWithYoAsE = normalizedExpected.replace(/ё/g, 'е')
+    return normalizedInput === expectedWithYoAsE
+  }
+
   // Проверка текущего пропуска
   function handleCheckGap() {
-    const currentInput = gaps[currentGapIndex].input.toLowerCase()
+    const currentInput = gaps[currentGapIndex].input
     const expectedSequence = missingSequences[currentGapIndex]
-    const isCorrect = currentInput === expectedSequence
+
+    const isCorrect = isAnswerCorrect(currentInput, expectedSequence)
 
     const newGaps = [...gaps]
     newGaps[currentGapIndex] = {
@@ -120,17 +136,14 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
 
     const nextIndex = currentGapIndex + 1
 
-    // Если это ПОСЛЕДНИЙ пропуск → переходим к следующему слову
     if (nextIndex >= gapsCount) {
       setAllCompleted(true)
 
-      // Добавляем задержку для показа результата (эмодзи), затем автопереход
       setTimeout(() => {
         const allCorrect = newGaps.every((gap) => gap.isCorrect === true)
         onNext(allCorrect)
-      }, 1000) // 1 секунда чтобы увидеть 🎉 или 👏
+      }, 1000)
     } else {
-      // Если НЕ последний → фокусируем следующий input
       setCurrentGapIndex(nextIndex)
       focusNextInput(nextIndex)
     }

@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { GroupsList } from '@/components/groups-list'
+import { GroupsList } from '@/components/entities/group/groups-list'
 import { Loader2, Sparkles } from 'lucide-react'
 
 export default function Home() {

@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Link from 'next/link'
-import { AddWordForm } from '@/components/admin/add-word-form'
-import { WordsListServer } from '@/components/admin/words-list-server'
-import { GroupsListServer } from '@/components/admin/groups-list-server'
+import { AddWordForm } from '@/components/features/add-word-form'
+import { WordsListServer } from '@/components/widgets/admin/words-list-server'
+import { GroupsListServer } from '@/components/widgets/admin/groups-list-server'
 import { EnvVarWarningAdmin } from '@/components/env-var-warning-admin'
 
 /**

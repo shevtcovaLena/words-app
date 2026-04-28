@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { createClient } from '@/supabase/server'
-import { WordsList } from './words-list'
+import { WordsList } from '../../entities/word/words-list'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 

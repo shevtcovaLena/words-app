@@ -21,8 +21,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { addWord, type ActionResult } from '@/app/admin/actions'
-import { WordMaskEditor } from './word-mask-editor'
-import { PhotoUpload } from './photo-upload'
+import { WordMaskEditor } from '../shared/word-mask-editor'
+import { PhotoUpload } from '../features/photo-upload'
 
 /**
  * Форма для добавления нового слова с визуальным редактором маски

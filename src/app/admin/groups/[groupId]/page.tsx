@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { createClient } from '@/supabase/server'
-import { GroupWordsManager } from '@/components/admin/group-words-manager'
+import { GroupWordsManager } from '@/components/widgets/admin/group-words-manager'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'

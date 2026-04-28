@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 import { createClient } from '@/supabase/server'
-import { GroupManager } from './group-manager'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 import type { Database } from '@/types/supabase'
+import { GroupManager } from '@/components/widgets/admin/group-manager'
 
 type Group = Database['public']['Tables']['word_groups']['Row']
 

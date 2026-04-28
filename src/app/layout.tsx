@@ -7,7 +7,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './globals.css'
 import ReactQueryProvider from '@/providers/ReactQueryProvider'
 import { UserProvider } from '@/contexts/user-context'
-import { Header } from '@/components/header'
+import { Header } from '@/components/shared/header'
 import { getCurrentUser } from '@/lib/auth'
 
 const defaultUrl = process.env.VERCEL_URL

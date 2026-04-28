@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { VirtualList } from '@/components/shared/virtual-list'
 import {
   addWordsToGroup,
   removeWordsFromGroup,
@@ -17,7 +17,7 @@ import {
 } from '@/app/admin/group-actions'
 import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react'
 import type { Database } from '@/types/supabase'
-import WordRow from './words-list-item'
+import WordRow from '../../entities/word/words-list-item'
 
 type Word = Database['public']['Tables']['words']['Row']
 type GroupItem = Database['public']['Tables']['word_group_items']['Row']
@@ -199,23 +199,26 @@ export function GroupWordsManager({
                 Выбрать все доступные
               </Button>
             </div>
-            <div className="max-h-[500px] space-y-2 overflow-y-auto rounded-lg border p-3">
-              {sortedAllWords
-                .filter((word) => !groupWordIds.has(word.id))
-                .map((word) => {
-                  const otherGroups = otherGroupsMap.get(word.id) || []
-                  return (
-                    <WordRow
-                      key={word.id}
-                      word={word}
-                      isSelected={selectedWords.has(word.id)}
-                      onToggle={toggleWordSelection}
-                      badgeCount={otherGroups.length}
-                      variant="available"
-                    />
-                  )
-                })}
-            </div>
+            <VirtualList
+              items={sortedAllWords.filter(
+                (word) => !groupWordIds.has(word.id),
+              )}
+              height={500}
+              estimateSize={72}
+              className="rounded-lg border p-3"
+              renderItem={(word) => {
+                const otherGroups = otherGroupsMap.get(word.id) || []
+                return (
+                  <WordRow
+                    word={word}
+                    isSelected={selectedWords.has(word.id)}
+                    onToggle={toggleWordSelection}
+                    badgeCount={otherGroups.length}
+                    variant="available"
+                  />
+                )
+              }}
+            />
             <Button
               onClick={handleAddWords}
               disabled={isPending || selectedWords.size === 0}
@@ -245,27 +248,24 @@ export function GroupWordsManager({
                 Выбрать все
               </Button>
             </div>
-            <div className="max-h-[500px] space-y-2 overflow-y-auto rounded-lg border p-3">
-              {sortedGroupWords.length === 0 ? (
-                <p className="text-muted-foreground py-8 text-center text-sm">
-                  В группе пока нет слов
-                </p>
-              ) : (
-                sortedGroupWords.map((word) => {
-                  const otherGroups = otherGroupsMap.get(word.id) || []
-                  return (
-                    <WordRow
-                      key={word.id}
-                      word={word}
-                      isSelected={selectedGroupWords.has(word.id)}
-                      onToggle={toggleGroupWordSelection}
-                      badgeCount={otherGroups.length}
-                      variant="group"
-                    />
-                  )
-                })
-              )}
-            </div>
+            <VirtualList
+              items={sortedGroupWords}
+              height={500}
+              estimateSize={72}
+              className="rounded-lg border p-3"
+              renderItem={(word) => {
+                const otherGroups = otherGroupsMap.get(word.id) || []
+                return (
+                  <WordRow
+                    word={word}
+                    isSelected={selectedGroupWords.has(word.id)}
+                    onToggle={toggleGroupWordSelection}
+                    badgeCount={otherGroups.length}
+                    variant="group"
+                  />
+                )
+              }}
+            />
             <Button
               onClick={handleRemoveWords}
               variant="destructive"

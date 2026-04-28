@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { ThemeSwitcher } from '@/components/theme-switcher'
+import { ThemeSwitcher } from '@/components/features/theme-switcher'
 import { useUser } from '@/contexts/user-context'
 import { Button } from '@/components/ui/button'
-import { LogoutButton } from '@/components/logout-button'
+import { LogoutButton } from '@/components/shared/logout-button'
 
 export function Header() {
   const { isAuthenticated } = useUser()

@@ -3,7 +3,7 @@
 import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { WordsPractice } from '@/components/words/words-practice'
+import { WordsPractice } from '@/components/widgets/words/words-practice'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
