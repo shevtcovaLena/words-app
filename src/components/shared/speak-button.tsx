@@ -2,52 +2,85 @@
 
 import { Button } from '@/components/ui/button'
 import { Volume2, Pause } from 'lucide-react'
-import { useCallback, useState, useRef } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useRef,
+  useSyncExternalStore,
+} from 'react'
 
 interface SpeakButtonProps {
   text: string
   className?: string
 }
 
+function isUnsafeSpeechPlatform(userAgent: string): boolean {
+  return /Android|HarmonyOS/i.test(userAgent)
+}
+
+function canUseSpeechSynthesis(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false
+  }
+
+  if (isUnsafeSpeechPlatform(navigator.userAgent)) {
+    return false
+  }
+
+  return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window
+}
+
 export function SpeakButton({ text, className = '' }: SpeakButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const isSupported = useSyncExternalStore(
+    () => () => {},
+    canUseSpeechSynthesis,
+    () => false,
+  )
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
-  const speak = useCallback(() => {
-    // HarmonyOS fallback
-    if (navigator.userAgent.includes('HarmonyOS')) {
-      // Пробуем Huawei TTS
-      if ((window as any).huawei?.tts?.speak) {
-        ;(window as any).huawei.tts.speak(text)
-        setIsPlaying(true)
-        setTimeout(() => setIsPlaying(false), 3000)
-        return
+  useEffect(() => {
+    return () => {
+      try {
+        window.speechSynthesis?.cancel()
+      } catch {
+        // Озвучка не должна ломать игровой экран.
       }
+    }
+  }, [])
 
-      // Fallback: уведомление
-      alert('Звук недоступен на этом устройстве')
+  const speak = useCallback(() => {
+    if (!canUseSpeechSynthesis()) {
+      setIsPlaying(false)
       return
     }
 
-    if (!('speechSynthesis' in window)) return
+    try {
+      window.speechSynthesis.cancel()
 
-    window.speechSynthesis.cancel()
+      const utterance = new window.SpeechSynthesisUtterance(text)
+      utteranceRef.current = utterance
 
-    const utterance = new SpeechSynthesisUtterance(text)
-    utteranceRef.current = utterance
+      utterance.lang = 'ru-RU'
+      utterance.rate = 0.9
 
-    utterance.lang = 'ru-RU'
-    utterance.rate = 0.9
+      utterance.onstart = () => setIsPlaying(true)
+      utterance.onend = () => setIsPlaying(false)
+      utterance.onerror = () => setIsPlaying(false)
 
-    utterance.onstart = () => setIsPlaying(true)
-    utterance.onend = () => setIsPlaying(false)
-    utterance.onerror = () => setIsPlaying(false)
-
-    window.speechSynthesis.speak(utterance)
+      window.speechSynthesis.speak(utterance)
+    } catch {
+      setIsPlaying(false)
+    }
   }, [text])
 
   const stop = useCallback(() => {
-    window.speechSynthesis.cancel()
+    try {
+      window.speechSynthesis?.cancel()
+    } catch {
+      // Озвучка не должна ломать игровой экран.
+    }
     setIsPlaying(false)
   }, [])
 
@@ -59,8 +92,8 @@ export function SpeakButton({ text, className = '' }: SpeakButtonProps) {
     }
   }, [isPlaying, speak, stop])
 
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-    return null // ❌ НЕ показываем кнопку
+  if (!isSupported) {
+    return null
   }
 
   return (

@@ -109,8 +109,6 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
     const normalizedExpected = normalizeOnlyEToYo(expected)
 
     if (normalizedInput === normalizedExpected) return true
-
-    // разрешаем только "е" вместо "ё" в ответе
     const expectedWithYoAsE = normalizedExpected.replace(/ё/g, 'е')
     return normalizedInput === expectedWithYoAsE
   }
@@ -177,14 +175,18 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
       const char = word.mask[i]
 
       if (char === '_') {
+        while (i < word.mask.length && word.mask[i] === '_') {
+          i++
+        }
+
         const currentGap = gaps[gapIndex]
         const isCurrentGap = gapIndex === currentGapIndex && !allCompleted
         const expectedSequence = missingSequences[gapIndex]
+        const inputWidth = `${Math.max(expectedSequence?.length ?? 1, 1) * 2.25}rem`
 
         // Защита от выхода за пределы массива
         if (!currentGap || !expectedSequence) {
           gapIndex++
-          i++
           continue
         }
 
@@ -221,20 +223,23 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
                 value={currentGap.input}
                 onChange={(e) => handleInputChange(e.target.value)}
                 onKeyPress={handleKeyPress}
+                maxLength={expectedSequence.length}
                 className="h-12 w-12 rounded-xl border-4 border-yellow-400 bg-yellow-50 text-center text-2xl font-bold transition-all focus:border-yellow-500 focus:ring-2 focus:ring-yellow-300 focus:outline-none md:h-16 md:w-16 md:text-4xl dark:bg-yellow-900/20"
-                style={{ fontSize: '16px' }} // ← минимум 16px для iOS (предотвращает zoom)
+                style={{ fontSize: '16px', width: inputWidth }} // ← минимум 16px для iOS (предотвращает zoom)
                 autoFocus={isCurrentGap}
               />
             ) : (
               // Будущий пропуск - показываем пустое место
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl border-4 border-dashed border-gray-300 text-2xl text-gray-400 md:h-16 md:w-16 dark:border-gray-600">
+              <span
+                className="inline-flex h-12 w-12 items-center justify-center rounded-xl border-4 border-dashed border-gray-300 text-2xl text-gray-400 md:h-16 md:w-16 dark:border-gray-600"
+                style={{ width: inputWidth }}
+              >
                 ?
               </span>
             )}
           </motion.span>,
         )
         gapIndex++
-        i++
       } else if (char === ' ') {
         // Пробел между словами
         elements.push(

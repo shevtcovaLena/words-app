@@ -1,62 +1,30 @@
 /**
- * Получает все пропущенные буквы из слова по порядку
- * Один пропуск _ может соответствовать нескольким буквам (например, "ру_ский" → "русский", где _ = "сс")
+ * Получает все пропущенные группы букв из слова по порядку
+ * Группа подряд идущих _ соответствует такой же группе букв в слове
  * @param fullWord - Полное слово (например, "воробей" или "русский язык")
- * @param mask - Маска с пропусками (например, "в_р_бей" или "ру_ский язык")
+ * @param mask - Маска с пропусками (например, "в_р_бей" или "ру__кий язык")
  * @returns Массив пропущенных последовательностей букв по порядку (например, ["о", "о"] или ["сс"])
  */
 export function getMissingLetters(fullWord: string, mask: string): string[] {
   const missingLetters: string[] = []
-  let wordIndex = 0
-  let maskIndex = 0
 
-  while (maskIndex < mask.length && wordIndex < fullWord.length) {
-    if (mask[maskIndex] === '_') {
-      // Нашли пропуск - собираем все буквы до следующего совпадения
-      const startWordIndex = wordIndex
-      maskIndex++ // Переходим к следующему символу в маске
+  let index = 0
+  while (index < mask.length && index < fullWord.length) {
+    if (mask[index] === '_') {
+      const startIndex = index
 
-      // Продолжаем, пока не найдем совпадение или не закончится слово
-      while (wordIndex < fullWord.length) {
-        // Проверяем, совпадает ли текущая позиция в слове с текущей позицией в маске
-        if (
-          maskIndex < mask.length &&
-          fullWord[wordIndex] === mask[maskIndex] &&
-          fullWord[wordIndex] !== ' '
-        ) {
-          // Нашли совпадение - пропуск закончился
-          break
-        }
-        // Также останавливаемся, если в маске закончились символы
-        if (maskIndex >= mask.length) {
-          // Берем все оставшиеся буквы
-          while (wordIndex < fullWord.length) {
-            wordIndex++
-          }
-          break
-        }
-        wordIndex++
+      while (index < mask.length && mask[index] === '_') {
+        index++
       }
 
-      // Сохраняем последовательность пропущенных букв
       const missingSequence = fullWord
-        .substring(startWordIndex, wordIndex)
+        .substring(startIndex, index)
         .toLowerCase()
-        .replace(/\s+/g, '')
       if (missingSequence) {
         missingLetters.push(missingSequence)
       }
-    } else if (mask[maskIndex] === fullWord[wordIndex]) {
-      // Символы совпадают
-      maskIndex++
-      wordIndex++
-    } else if (mask[maskIndex] === ' ' && fullWord[wordIndex] === ' ') {
-      // Пробелы совпадают
-      maskIndex++
-      wordIndex++
     } else {
-      // Несовпадение - пропускаем в маске (может быть лишний символ)
-      maskIndex++
+      index++
     }
   }
 
@@ -65,17 +33,17 @@ export function getMissingLetters(fullWord: string, mask: string): string[] {
 
 /**
  * Подсчитывает количество пропусков в маске
- * Один пропуск _ может соответствовать нескольким буквам
+ * Подряд идущие _ считаются одним пропуском
  * @param mask - Маска с пропусками
  * @returns Количество пропусков (групп пропущенных букв)
  */
 export function countMissingLetters(mask: string): number {
-  return (mask.match(/_/g) || []).length
+  return (mask.match(/_+/g) || []).length
 }
 
 /**
  * Проверяет, правильно ли заполнены все пропущенные буквы в слове
- * Один пропуск _ может соответствовать нескольким буквам
+ * Подряд идущие _ считаются одной последовательностью букв
  * @param fullWord - Полное слово (например, "воробей" или "русский язык")
  * @param mask - Маска с пропусками (например, "в_р_бей" или "ру_ский язык")
  * @param userInput - Введенные пользователем буквы подряд (например, "оо" или "сс")
@@ -124,7 +92,7 @@ export function checkWord(
 
 /**
  * Заменяет все пропуски в маске на введенные буквы по порядку
- * Один пропуск _ заменяется на всю последовательность букв (может быть несколько букв)
+ * Подряд идущие _ заменяются на всю последовательность букв
  * @param mask - Маска с пропусками (например, "в_р_бей" или "ру_ский")
  * @param letters - Введенные буквы подряд (например, "оо" или "сс")
  * @param fullWord - Полное слово для определения длины последовательности (опционально)
@@ -135,37 +103,36 @@ export function fillMask(
   letters: string,
   fullWord?: string,
 ): string {
-  let result = mask
+  let result = ''
   const letterSequences = letters.split('') // Пока считаем, что каждая буква - отдельная последовательность
   let sequenceIndex = 0
 
   // Если передан fullWord, используем его для определения последовательностей
   if (fullWord) {
     const sequences = getMissingLetters(fullWord, mask)
-    sequenceIndex = 0
+    let i = 0
 
-    for (let i = 0; i < result.length; i++) {
-      if (result[i] === '_' && sequenceIndex < sequences.length) {
-        // Заменяем _ на соответствующую последовательность букв
+    while (i < mask.length) {
+      if (mask[i] === '_' && sequenceIndex < sequences.length) {
+        while (i < mask.length && mask[i] === '_') {
+          i++
+        }
+
         const sequence = sequences[sequenceIndex]
-        // Берем буквы из введенного текста для этой последовательности
         const startPos = sequences.slice(0, sequenceIndex).join('').length
         const endPos = startPos + sequence.length
         const replacement = letters.substring(startPos, endPos)
 
-        if (replacement) {
-          result =
-            result.substring(0, i) + replacement + result.substring(i + 1)
-          sequenceIndex++
-        } else {
-          // Если не хватило букв, используем последовательность из fullWord
-          result = result.substring(0, i) + sequence + result.substring(i + 1)
-          sequenceIndex++
-        }
+        result += replacement || sequence
+        sequenceIndex++
+      } else {
+        result += mask[i]
+        i++
       }
     }
   } else {
     // Старый способ - по одной букве на пропуск
+    result = mask
     for (let i = 0; i < result.length; i++) {
       if (result[i] === '_' && sequenceIndex < letterSequences.length) {
         result =

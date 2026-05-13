@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     title: 'СЛОВАРЬиКо',
   },
   icons: {
-    icon: '/icon-192x192.png',
-    apple: '/icon-192x192.png',
+    icon: '/icon.svg',
+    apple: '/icon.svg',
   },
 }
 
