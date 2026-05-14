@@ -23,7 +23,12 @@ export function Header() {
         <div className="flex items-center gap-4">
           <ThemeSwitcher />
           {isAuthenticated ? (
-            <LogoutButton />
+            <>
+              <Button asChild variant="outline">
+                <Link href="/admin">Админ-панель</Link>
+              </Button>
+              <LogoutButton />
+            </>
           ) : (
             <Link href="/auth/login">
               <Button variant="outline" size="sm">

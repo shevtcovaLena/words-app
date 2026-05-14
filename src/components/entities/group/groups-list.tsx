@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { createClient } from '@/supabase/server'
 import {
   Card,
@@ -13,10 +14,92 @@ import type { Database } from '@/types/supabase'
 
 type Group = Database['public']['Tables']['word_groups']['Row']
 
+const COUNT_CHUNK = 40
+const COUNT_RETRIES = 3
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms))
+}
+
+function isRetriableNetworkError(message: string): boolean {
+  const m = message.toLowerCase()
+  return (
+    m.includes('fetch failed') ||
+    m.includes('econnreset') ||
+    m.includes('etimedout') ||
+    m.includes('terminated') ||
+    m.includes('network') ||
+    m.includes('socket')
+  )
+}
+
+/**
+ * Подсчёт строк word_group_items по group_id (чанки + ретраи — один длинный .in() часто рвётся по сети).
+ */
+async function fetchWordCountsByGroupIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  groupIds: string[],
+): Promise<Map<string, number>> {
+  const countsMap = new Map<string, number>()
+  if (groupIds.length === 0) {
+    return countsMap
+  }
+
+  let anyChunkFailed = false
+  let lastFailMessage = ''
+
+  for (let i = 0; i < groupIds.length; i += COUNT_CHUNK) {
+    const chunk = groupIds.slice(i, i + COUNT_CHUNK)
+    let rows: Array<{ group_id: string }> | null = null
+    let lastMessage = ''
+
+    for (let attempt = 1; attempt <= COUNT_RETRIES; attempt++) {
+      const { data, error } = await supabase
+        .from('word_group_items')
+        .select('group_id')
+        .in('group_id', chunk)
+
+      if (!error) {
+        rows = (data || []) as Array<{ group_id: string }>
+        break
+      }
+
+      lastMessage = error.message
+      const canRetry =
+        attempt < COUNT_RETRIES && isRetriableNetworkError(error.message)
+      if (canRetry) {
+        await sleep(350 * attempt)
+        continue
+      }
+      break
+    }
+
+    if (rows === null) {
+      anyChunkFailed = true
+      lastFailMessage = lastMessage
+      continue
+    }
+
+    for (const item of rows) {
+      countsMap.set(item.group_id, (countsMap.get(item.group_id) || 0) + 1)
+    }
+  }
+
+  if (anyChunkFailed) {
+    console.warn(
+      '[groups-list] Не удалось загрузить часть данных для счётчика слов в группах (часть бейджей может быть занижена).',
+      lastFailMessage,
+    )
+  }
+
+  return countsMap
+}
+
 /**
  * Загружает список групп слов с количеством слов в каждой
  */
 async function fetchGroups(): Promise<(Group & { wordsCount: number })[]> {
+  noStore()
   const supabase = await createClient()
 
   // Загружаем группы
@@ -26,7 +109,7 @@ async function fetchGroups(): Promise<(Group & { wordsCount: number })[]> {
     .order('created_at', { ascending: false })
 
   if (groupsError) {
-    console.error('Ошибка загрузки групп:', groupsError)
+    console.warn('Ошибка загрузки групп:', groupsError.message)
     return []
   }
 
@@ -34,24 +117,9 @@ async function fetchGroups(): Promise<(Group & { wordsCount: number })[]> {
     return []
   }
 
-  // Загружаем количество слов в каждой группе
   const typedGroups = groups as Group[]
   const groupIds = typedGroups.map((g) => g.id)
-  const { data: counts, error: countsError } = await supabase
-    .from('word_group_items')
-    .select('group_id')
-    .in('group_id', groupIds)
-
-  if (countsError) {
-    console.error('Ошибка загрузки количества слов:', countsError)
-    return typedGroups.map((g) => ({ ...g, wordsCount: 0 }))
-  }
-
-  // Подсчитываем слова для каждой группы
-  const countsMap = new Map<string, number>()
-  ;(counts as Array<{ group_id: string }>)?.forEach((item) => {
-    countsMap.set(item.group_id, (countsMap.get(item.group_id) || 0) + 1)
-  })
+  const countsMap = await fetchWordCountsByGroupIds(supabase, groupIds)
 
   return typedGroups.map((group) => ({
     ...group,

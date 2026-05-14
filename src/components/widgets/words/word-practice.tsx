@@ -182,7 +182,7 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
         const currentGap = gaps[gapIndex]
         const isCurrentGap = gapIndex === currentGapIndex && !allCompleted
         const expectedSequence = missingSequences[gapIndex]
-        const inputWidth = `${Math.max(expectedSequence?.length ?? 1, 1) * 2.25}rem`
+        const inputWidth = `${Math.max(expectedSequence?.length ?? 1, 1)}ch`
 
         // Защита от выхода за пределы массива
         if (!currentGap || !expectedSequence) {
@@ -223,9 +223,9 @@ export function WordPractice({ word, onNext, isRetry }: WordPracticeProps) {
                 value={currentGap.input}
                 onChange={(e) => handleInputChange(e.target.value)}
                 onKeyPress={handleKeyPress}
-                maxLength={expectedSequence.length}
-                className="h-12 w-12 rounded-xl border-4 border-yellow-400 bg-yellow-50 text-center text-2xl font-bold transition-all focus:border-yellow-500 focus:ring-2 focus:ring-yellow-300 focus:outline-none md:h-16 md:w-16 md:text-4xl dark:bg-yellow-900/20"
-                style={{ fontSize: '16px', width: inputWidth }} // ← минимум 16px для iOS (предотвращает zoom)
+                className="h-12 w-[1ch] max-w-[8ch] min-w-[3ch] rounded-xl border-4 border-yellow-400 bg-yellow-50 text-center text-2xl font-bold transition-all focus:border-yellow-500 focus:ring-2 focus:ring-yellow-300 focus:outline-none md:h-16 md:w-[1.1ch] md:max-w-[10ch] md:min-w-[4ch] md:text-4xl dark:bg-yellow-900/20"
+                style={{ fontSize: '16px' }} // Оставь только для iOS zoom
+                maxLength={expectedSequence.length} // ← минимум 16px для iOS (предотвращает zoom)
                 autoFocus={isCurrentGap}
               />
             ) : (

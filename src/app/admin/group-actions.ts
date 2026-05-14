@@ -4,6 +4,7 @@ import { createClient } from '@/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Database } from '@/types/supabase'
 
+type GroupRow = Database['public']['Tables']['word_groups']['Row']
 type GroupInsert = Database['public']['Tables']['word_groups']['Insert']
 type GroupUpdate = Database['public']['Tables']['word_groups']['Update']
 type GroupItemInsert =
@@ -16,7 +17,7 @@ type GroupItemUpdate =
  * Результат выполнения Server Action
  */
 export type ActionResult =
-  | { success: true; message?: string }
+  | { success: true; message?: string; group?: GroupRow }
   | { success: false; error: string }
 
 /**
@@ -41,8 +42,12 @@ export async function createGroup(formData: FormData): Promise<ActionResult> {
     description,
   }
 
-  // @ts-expect-error - Supabase типизация не всегда корректно работает с insert
-  const { error } = await supabase.from('word_groups').insert(insertData)
+  const { data, error } = await supabase
+    .from('word_groups')
+    // @ts-expect-error - Supabase типизация не всегда корректно работает с insert
+    .insert(insertData)
+    .select('*')
+    .single()
 
   if (error) {
     return { success: false, error: error.message }
@@ -50,7 +55,11 @@ export async function createGroup(formData: FormData): Promise<ActionResult> {
 
   revalidatePath('/admin')
   revalidatePath('/')
-  return { success: true, message: 'Группа успешно создана!' }
+  return {
+    success: true,
+    message: 'Группа успешно создана!',
+    group: data as GroupRow,
+  }
 }
 
 /**
@@ -74,19 +83,26 @@ export async function updateGroup(
 
   const updateData: GroupUpdate = { name, description }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('word_groups')
     // @ts-expect-error - Supabase типизация не всегда корректно работает с update
     .update(updateData)
     .eq('id', groupId)
+    .select('*')
+    .single()
 
   if (error) {
     return { success: false, error: error.message }
   }
 
   revalidatePath('/admin')
+  revalidatePath(`/admin/groups/${groupId}`)
   revalidatePath('/')
-  return { success: true, message: 'Группа успешно обновлена!' }
+  return {
+    success: true,
+    message: 'Группа успешно обновлена!',
+    group: data as GroupRow,
+  }
 }
 
 /**

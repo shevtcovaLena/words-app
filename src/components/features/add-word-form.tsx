@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,7 +28,7 @@ import { PhotoUpload } from '../features/photo-upload'
  * Форма для добавления нового слова с визуальным редактором маски
  */
 export function AddWordForm() {
-  const [isPending, startTransition] = useTransition()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<ActionResult | null>(null)
   const [fullWord, setFullWord] = useState('')
   const [mask, setMask] = useState('')
@@ -96,17 +96,18 @@ export function AddWordForm() {
     formData.append('level', level)
     formData.append('is_public', isPublic ? 'on' : '')
 
-    startTransition(async () => {
+    setIsSubmitting(true)
+    try {
       const actionResult = await addWord(formData)
       setResult(actionResult)
 
       if (actionResult.success) {
-        // Сброс формы при успехе
         resetForm()
-        // Очистка сообщения через 3 секунды
         setTimeout(() => setResult(null), 3000)
       }
-    })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   /**
@@ -212,7 +213,7 @@ export function AddWordForm() {
       {/* Загрузка фото с OCR */}
       <PhotoUpload
         onWordsExtracted={handleWordsExtracted}
-        disabled={isPending}
+        disabled={isSubmitting}
       />
 
       <Card>
@@ -235,7 +236,7 @@ export function AddWordForm() {
                 value={fullWord}
                 onChange={(e) => handleFullWordChange(e.target.value)}
                 className="min-h-[44px] text-lg"
-                disabled={isPending}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -265,7 +266,7 @@ export function AddWordForm() {
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
                 className="min-h-[44px]"
-                disabled={isPending}
+                disabled={isSubmitting}
               />
               <p className="text-muted-foreground text-xs">
                 От 1 (легкий) до 5 (сложный)
@@ -277,7 +278,7 @@ export function AddWordForm() {
                 id="is_public"
                 checked={isPublic}
                 onCheckedChange={(checked) => setIsPublic(checked === true)}
-                disabled={isPending}
+                disabled={isSubmitting}
               />
               <Label
                 htmlFor="is_public"
@@ -302,9 +303,9 @@ export function AddWordForm() {
             <Button
               type="submit"
               className="min-h-[44px] w-full"
-              disabled={isPending || !mask}
+              disabled={isSubmitting || !mask}
             >
-              {isPending ? 'Добавление...' : 'Добавить слово'}
+              {isSubmitting ? 'Добавление...' : 'Добавить слово'}
             </Button>
           </form>
         </CardContent>
@@ -329,14 +330,14 @@ export function AddWordForm() {
               onChange={(e) => setBatchWords(e.target.value)}
               rows={5}
               className="min-h-[120px] font-mono"
-              disabled={isPending || isBatchDialogOpen}
+              disabled={isSubmitting || isBatchDialogOpen}
             />
           </div>
 
           <Button
             onClick={handleBatchStart}
             className="min-h-[44px] w-full"
-            disabled={isPending || isBatchDialogOpen || !batchWords.trim()}
+            disabled={isSubmitting || isBatchDialogOpen || !batchWords.trim()}
           >
             Разметить пропуски
           </Button>
